@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      letter-spacing: 0.35em;
+      color: #c084fc;
+      margin-bottom: 32px;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+
+    .card {
+      background: #16213e;
+      border-radius: 14px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+      width: 100%;
+      max-width: 540px;
+      overflow: hidden;
+    }
+
+    .input-row {
+      display: flex;
+      padding: 20px;
+      gap: 10px;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: #0f3460;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #e0e0e0;
+      font-size: 1rem;
+      outline: none;
+      transition: box-shadow 0.2s;
+    }
+    .input-row input::placeholder { color: #4b5563; }
+    .input-row input:focus { box-shadow: 0 0 0 2px #c084fc; }
+
+    .btn-add {
+      background: #c084fc;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-add:hover  { background: #a855f7; }
+    .btn-add:active { transform: scale(0.97); }
+
+    .list {
+      list-style: none;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    .list:empty::after {
+      content: 'Nothing to do yet';
+      display: block;
+      text-align: center;
+      padding: 48px;
+      color: #374151;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid #0f3460;
+      transition: background 0.15s;
+    }
+    .item:last-child { border-bottom: none; }
+    .item:hover { background: #1b2f54; }
+
+    .item input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      accent-color: #c084fc;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .text {
+      flex: 1;
+      font-size: 0.97rem;
+      line-height: 1.4;
+      word-break: break-word;
+      transition: color 0.2s;
+    }
+    .item.done .text {
+      text-decoration: line-through;
+      color: #374151;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #374151;
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s;
+    }
+    .item:hover .btn-del { opacity: 1; }
+    .btn-del:hover { color: #f87171; }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-top: 1px solid #0f3460;
+    }
+
+    .count {
+      font-size: 0.82rem;
+      color: #4b5563;
+      min-width: 64px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 2px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .filter-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: #6b7280;
+      padding: 4px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .filter-btn:hover { color: #e0e0e0; }
+    .filter-btn.active { border-color: #c084fc; color: #c084fc; }
+
+    .btn-clear {
+      background: none;
+      border: none;
+      color: #4b5563;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-clear:hover { color: #f87171; }
+
+    .list::-webkit-scrollbar { width: 5px; }
+    .list::-webkit-scrollbar-track { background: transparent; }
+    .list::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<h1>Todo</h1>
+
+<div class="card">
+  <div class="input-row">
+    <input id="inp" type="text" placeholder="What needs to be done?" autofocus>
+    <button class="btn-add" onclick="addTodo()">Add</button>
+  </div>
+  <ul class="list" id="list"></ul>
+  <div class="footer">
+    <span class="count" id="count"></span>
+    <div class="filters">
+      <button class="filter-btn active" data-f="all"       onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn"        data-f="active"    onclick="setFilter('active',this)">Active</button>
+      <button class="filter-btn"        data-f="done"      onclick="setFilter('done',this)">Done</button>
+    </div>
+    <button class="btn-clear" onclick="clearDone()">Clear done</button>
+  </div>
+</div>
+
+<script>
+  let todos  = JSON.parse(localStorage.getItem('todos') || '[]');
+  let filter = 'all';
+
+  function save() {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function render() {
+    const visible = todos.filter(t =>
+      filter === 'all'    ? true :
+      filter === 'active' ? !t.done :
+                             t.done
+    );
+
+    document.getElementById('list').innerHTML = visible.map(t => `
+      <li class="item${t.done ? ' done' : ''}">
+        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggle(${t.id})">
+        <span class="text">${esc(t.text)}</span>
+        <button class="btn-del" onclick="remove(${t.id})" title="Delete">×</button>
+      </li>
+    `).join('');
+
+    const left = todos.filter(t => !t.done).length;
+    document.getElementById('count').textContent =
+      left === 1 ? '1 left' : `${left} left`;
+  }
+
+  function addTodo() {
+    const inp  = document.getElementById('inp');
+    const text = inp.value.trim();
+    if (!text) return;
+    todos.unshift({ id: Date.now(), text, done: false });
+    inp.value = '';
+    save(); render();
+  }
+
+  function toggle(id) {
+    const t = todos.find(t => t.id === id);
+    if (t) { t.done = !t.done; save(); render(); }
+  }
+
+  function remove(id) {
+    todos = todos.filter(t => t.id !== id);
+    save(); render();
+  }
+
+  function clearDone() {
+    todos = todos.filter(t => !t.done);
+    save(); render();
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  document.getElementById('inp').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+
+  render();
+</script>
+</body>
+</html>
